@@ -8,12 +8,15 @@ import { supabase } from '../supabase'
  */
 export function useSales() {
   const [sales, setSales] = useState({})
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const fetchAll = async () => {
-      const { data } = await supabase
+      const { data, error: e } = await supabase
         .from('players').select('pool_id, price, team:teams(name)')
         .not('pool_id', 'is', null)
+      if (e) return setError(e.message)
+      setError('')
       setSales(Object.fromEntries((data ?? []).map(s => [s.pool_id, s])))
     }
 
@@ -26,5 +29,5 @@ export function useSales() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  return sales
+  return { sales, error }
 }

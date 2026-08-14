@@ -5,7 +5,7 @@ import { initials, money, photoUrl, playerTraits } from '../lib/format'
  * Every registered player. Sold ones carry the team that bought them and the
  * price they went for. The auctioneer taps an unsold card to put them up.
  */
-export function PlayerMarket({ pool, sales, isAuctioneer, onError }) {
+export function PlayerMarket({ pool, sales, isAuctioneer, onError, loadError = '' }) {
   const putUp = async (player) => {
     const { error } = await supabase.from('block').upsert({
       id: true,
@@ -23,8 +23,13 @@ export function PlayerMarket({ pool, sales, isAuctioneer, onError }) {
       <h1>Players</h1>
       <p className="muted"><small>{sold} sold · {pool.length - sold} still available</small></p>
 
-      {pool.length === 0 && (
-        <p className="muted">No registrations yet. Players appear here as the form is filled.</p>
+      {loadError && <p className="err">Could not load the player list: {loadError}</p>}
+
+      {!loadError && pool.length === 0 && (
+        <p className="muted">
+          No registrations in the database yet. Players appear here as the form is filled,
+          once <code>player_pool</code> exists and the sync is running.
+        </p>
       )}
 
       <div className="gallery">

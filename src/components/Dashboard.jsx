@@ -13,11 +13,14 @@ import { PlayerMarket } from './PlayerMarket'
 
 export function Dashboard({ user }) {
   const { team, players, error, setError, loading, reload } = useTeam(user.id)
-  const isAuctioneer = useAuctioneer(user.id)
-  const teams = useTeams(isAuctioneer)
-  const pool = usePool()
-  const block = useBlock()
-  const sales = useSales()
+  const { isAuctioneer, error: authErr } = useAuctioneer(user.id)
+  const { teams, error: teamsErr } = useTeams(isAuctioneer)
+  const { pool, error: poolErr } = usePool()
+  const { block, error: blockErr } = useBlock()
+  const { sales, error: salesErr } = useSales()
+
+  // Every load failure surfaces; an empty screen must never pass for "no data".
+  const loadError = [authErr, teamsErr, poolErr, blockErr, salesErr].find(Boolean)
 
   if (loading) return <div className="glass">Loading…</div>
   if (!team) return <CreateTeam user={user} onDone={reload} />
@@ -36,12 +39,13 @@ export function Dashboard({ user }) {
       <Block block={block} team={team} pool={pool} teams={teams}
              isAuctioneer={isAuctioneer} onSold={reload} />
 
-      {error && <p className="err">{error}</p>}
+      {(error || loadError) && <p className="err">{error || loadError}</p>}
 
       <SquadGallery players={players} onChange={reload} onError={setError}
                     canUndo={isAuctioneer} />
 
-      <PlayerMarket pool={pool} sales={sales} isAuctioneer={isAuctioneer} onError={setError} />
+      <PlayerMarket pool={pool} sales={sales} isAuctioneer={isAuctioneer}
+                    loadError={poolErr} onError={setError} />
     </>
   )
 }

@@ -8,11 +8,14 @@ import { supabase } from '../supabase'
  */
 export function usePool() {
   const [pool, setPool] = useState([])
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    const fetchAll = () =>
-      supabase.from('player_pool').select('*').order('name')
-        .then(({ data }) => setPool(data ?? []))
+    const fetchAll = async () => {
+      const { data, error: e } = await supabase.from('player_pool').select('*').order('name')
+      if (e) setError(e.message)
+      else { setError(''); setPool(data ?? []) }
+    }
 
     fetchAll()
 
@@ -23,5 +26,5 @@ export function usePool() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  return pool
+  return { pool, error }
 }
