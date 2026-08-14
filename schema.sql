@@ -208,3 +208,18 @@ create policy teams_read_auctioneer on public.teams
 do $$ begin
   alter publication supabase_realtime add table public.players;
 exception when duplicate_object then null; end $$;
+
+-- 9. THE PUBLIC RESULT ----------------------------------------
+-- An auction is played in the open: every owner watches every lot and knows
+-- who bought whom for how much. So reads on teams and players are open to any
+-- signed-in owner. Writes stay exactly where section 8 put them.
+-- Nothing sensitive lives in these rows: player phone numbers were deliberately
+-- never imported (see section 7).
+
+drop policy if exists players_read_own on public.players;
+
+create policy players_read_all on public.players
+  for select to authenticated using (true);
+
+create policy teams_read_all on public.teams
+  for select to authenticated using (true);

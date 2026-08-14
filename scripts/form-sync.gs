@@ -7,6 +7,7 @@
  *       SUPABASE_URL = https://<your-project>.supabase.co
  *       SUPABASE_SERVICE_KEY = <your service key>   ← rotate first, never commit it
  *  3. Triggers → Add trigger → onFormSubmit → From spreadsheet → On form submit.
+ *  4. Run backfillExistingPhotos() once, to publish photos already submitted.
  *
  * The service key is safe here and only here: Apps Script runs on Google's
  * servers, never in a browser. It must never reach the app or this repo.
@@ -21,6 +22,7 @@ function onFormSubmit(e) {
   if (!v[2] || !v[2].trim()) return;              // no name — nothing to store
 
   var photo = /id=([\w-]+)/.exec(v[1] || '');
+  if (photo) publishPhoto(photo[1]);
   var props = PropertiesService.getScriptProperties();
   var url = props.getProperty('SUPABASE_URL');
   var key = props.getProperty('SUPABASE_SERVICE_KEY');
@@ -60,4 +62,34 @@ function toIso(ts) {
   var m = /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/.exec(ts || '');
   if (!m) return null;
   return m[3] + '-' + m[2] + '-' + m[1] + 'T' + m[4] + ':' + m[5] + ':' + m[6];
+}
+
+
+/**
+ * Form uploads land in Drive private to the form owner, so the app gets a
+ * sign-in page instead of a face. This grants link-read on the one file.
+ *
+ * Note this genuinely makes the photo public to anyone holding the URL —
+ * unavoidable when a browser renders it directly, and the URL contains an
+ * unguessable file id.
+ */
+function publishPhoto(fileId) {
+  try {
+    DriveApp.getFileById(fileId)
+      .setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (err) {
+    // A photo that will not publish must not lose the whole registration.
+    console.error('could not publish photo ' + fileId + ': ' + err);
+  }
+}
+
+/** One-off: publish every photo already sitting in the responses sheet. */
+function backfillExistingPhotos() {
+  var rows = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0].getDataRange().getValues();
+  var done = 0;
+  for (var i = 1; i < rows.length; i++) {
+    var m = /id=([\w-]+)/.exec(String(rows[i][1] || ''));
+    if (m) { publishPhoto(m[1]); done++; }
+  }
+  console.log('published ' + done + ' photos');
 }

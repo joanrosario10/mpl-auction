@@ -3,11 +3,13 @@ import { useTeam } from '../hooks/useTeam'
 import { useTeams } from '../hooks/useTeams'
 import { usePool } from '../hooks/usePool'
 import { useBlock } from '../hooks/useBlock'
+import { useSales } from '../hooks/useSales'
 import { useAuctioneer } from '../hooks/useAuctioneer'
 import { CreateTeam } from './CreateTeam'
 import { TeamStats } from './TeamStats'
 import { Block } from './Block'
 import { SquadGallery } from './SquadGallery'
+import { PlayerMarket } from './PlayerMarket'
 
 export function Dashboard({ user }) {
   const { team, players, error, setError, loading, reload } = useTeam(user.id)
@@ -15,6 +17,7 @@ export function Dashboard({ user }) {
   const teams = useTeams(isAuctioneer)
   const pool = usePool()
   const block = useBlock()
+  const sales = useSales()
 
   if (loading) return <div className="glass">Loading…</div>
   if (!team) return <CreateTeam user={user} onDone={reload} />
@@ -37,6 +40,8 @@ export function Dashboard({ user }) {
 
       <SquadGallery players={players} onChange={reload} onError={setError}
                     canUndo={isAuctioneer} />
+
+      <PlayerMarket pool={pool} sales={sales} isAuctioneer={isAuctioneer} onError={setError} />
     </>
   )
 }
