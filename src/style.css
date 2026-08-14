@@ -1,0 +1,104 @@
+/* Design language from the MPL auction Figma: stadium photo, glass cards,
+   red primary action, white type with a soft drop shadow.
+   ponytail: Power Grotesk is a paid font — Space Grotesk is the closest free stand-in. */
+:root {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  color-scheme: dark;
+  --red: #ff2d2d;
+  --grey: #d9d9d9;
+  --radius: clamp(20px, 5vw, 40px);
+  --drop: 0 4px 4px rgba(0, 0, 0, .25);
+}
+
+body { margin: 0; min-height: 100dvh; display: flex; justify-content: center;
+       padding: clamp(12px, 4vw, 24px); color: #fff; }
+
+/* fixed layer instead of background-attachment: fixed, which iOS Safari mishandles */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1;
+  background: linear-gradient(rgba(0, 4, 20, .2), rgba(0, 4, 20, .5)),
+              url('./assets/stadium.jpg') center / cover no-repeat;
+}
+
+main { width: 100%; max-width: 640px; }
+
+.brand { text-align: center; margin-bottom: clamp(16px, 5vw, 28px); text-shadow: var(--drop); }
+.brand b { display: block; font-size: clamp(36px, 12vw, 64px); letter-spacing: 2px; line-height: 1; }
+.brand span { font-size: clamp(11px, 3.2vw, 14px); letter-spacing: 3px; text-transform: uppercase; opacity: .8; }
+
+.glass {
+  background: linear-gradient(164deg, rgba(255, 255, 255, .3) 66%, rgba(255, 255, 255, .1) 83%);
+  backdrop-filter: blur(17px); -webkit-backdrop-filter: blur(17px);
+  border: 2px solid rgba(255, 255, 255, .7);
+  border-radius: var(--radius);
+  box-shadow: 0 3px 16px -1px rgba(0, 0, 0, .2);
+  padding: clamp(16px, 5vw, 32px);
+  margin-bottom: 16px;
+}
+
+h1 { font-size: clamp(22px, 6vw, 34px); font-weight: 400; margin: 0 0 16px; text-shadow: var(--drop); }
+
+input, button, select { font: inherit; min-height: 48px; touch-action: manipulation; }
+input {
+  width: 100%; box-sizing: border-box; margin-bottom: 12px;
+  background: rgba(217, 217, 217, .9); border: 0; border-radius: 12px;
+  padding: 12px 16px; color: #111; text-align: center;
+}
+input::placeholder { color: #6b6b6b; }
+button {
+  padding: 10px 22px; border: 0; border-radius: 10px; cursor: pointer;
+  background: var(--grey); color: #111;
+}
+button[type="submit"], form button:not([type]) { background: var(--red); color: #fff; }
+button:disabled { opacity: .55; cursor: default; }
+form { margin: 0; }
+
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row input { width: auto; flex: 1 1 140px; margin-bottom: 0; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stat { background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .35);
+        border-radius: 14px; padding: 12px; }
+.stat b { display: block; font-size: clamp(18px, 5vw, 24px); }
+.stat span { font-size: 11px; opacity: .75; }
+
+/* the hero card — the player currently up for auction */
+.block { text-align: center; }
+.block b { display: block; font-size: clamp(30px, 9vw, 56px); line-height: 1.05;
+           margin: 6px 0; text-shadow: var(--drop); overflow-wrap: anywhere; }
+.block span { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; opacity: .8; }
+.block form { margin-top: 16px; }
+
+.err { color: #ffb4b4; margin: 10px 0 0; white-space: pre-wrap; }
+.muted { opacity: .8; font-size: 13px; }
+
+table { width: 100%; border-collapse: collapse; }
+td, th { text-align: left; padding: 10px 4px; border-bottom: 1px solid rgba(255, 255, 255, .25);
+         overflow-wrap: anywhere; }
+th { font-weight: 400; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: .7; }
+td:last-child, th:last-child { text-align: right; }
+table button { min-height: 36px; padding: 4px 12px; font-size: 13px; }
+
+.link { background: none; min-height: 0; padding: 0; color: #fff;
+        text-decoration: underline; font-size: 14px; }
+
+@media (max-width: 420px) { td:nth-child(2), th:nth-child(2) { display: none; } }
+
+/* squad gallery — photo tiles, from the Figma 'Alloted Team' screen */
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+.pcard { position: relative; margin: 0; border-radius: 14px; overflow: hidden;
+         background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .35); }
+.pcard img, .pcard-blank { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+.pcard-blank { display: grid; place-items: center; font-size: 32px; opacity: .5;
+               background: rgba(0, 0, 0, .25); }
+.pcard figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 20px 8px 6px;
+                    background: linear-gradient(transparent, rgba(0, 0, 0, .85)); text-align: left; }
+.pcard figcaption b { display: block; font-size: 14px; line-height: 1.2; overflow-wrap: anywhere; }
+.pcard figcaption span { font-size: 12px; opacity: .8; }
+.pcard > button { position: absolute; top: 6px; right: 6px; min-height: 32px;
+                  padding: 2px 10px; font-size: 12px; border-radius: 8px; opacity: .85; }
+.block img.hero { display: block; width: min(260px, 70%); margin: 12px auto 0;
+                  aspect-ratio: 3 / 4; object-fit: cover; border-radius: 16px;
+                  border: 2px solid rgba(255, 255, 255, .6); }
+select { background: rgba(217, 217, 217, .9); color: #111; border: 0;
+         border-radius: 12px; padding: 12px 16px; flex: 1 1 160px; }
