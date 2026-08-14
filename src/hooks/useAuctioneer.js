@@ -7,6 +7,7 @@ export function useAuctioneer(userId) {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!userId) return
     supabase.from('auctioneers').select('user_id').eq('user_id', userId).maybeSingle()
       .then(({ data, error: e }) => {
         if (e) setError(e.message)
