@@ -223,3 +223,163 @@ create policy players_read_all on public.players
 
 create policy teams_read_all on public.teams
   for select to authenticated using (true);
+
+-- 10. THE ADMIN OWNS THE TEAMS --------------------------------
+-- Owners used to create their own team and pick their own purse. The organiser
+-- decides who owns what and with how much money, so team writes move to the
+-- auctioneer. Owners read only.
+
+drop policy if exists teams_own on public.teams;
+
+create policy teams_auctioneer on public.teams
+  for all to authenticated
+  using      (exists (select 1 from public.auctioneers a where a.user_id = auth.uid()))
+  with check (exists (select 1 from public.auctioneers a where a.user_id = auth.uid()));
+
+-- Assigning a team needs auth.users, which the client cannot read. Definer
+-- function, but it re-checks the caller is an auctioneer before doing anything.
+create or replace function public.assign_team(
+  p_email text, p_name text, p_purse numeric, p_squad int, p_base numeric
+) returns uuid language plpgsql security definer set search_path = public as $$
+declare v_owner uuid; v_team uuid;
+begin
+  if not exists (select 1 from public.auctioneers a where a.user_id = auth.uid()) then
+    raise exception 'Only the auctioneer can assign teams.';
+  end if;
+
+  select id into v_owner from auth.users where lower(email) = lower(trim(p_email));
+  if v_owner is null then
+    raise exception 'No account exists for %. Create the login first.', p_email;
+  end if;
+
+  insert into public.teams (owner_id, name, purse, squad_size, base_price)
+  values (v_owner, trim(p_name), p_purse, p_squad, p_base)
+  returning id into v_team;
+
+  return v_team;
+end $$;
+
+revoke all on function public.assign_team(text, text, numeric, int, numeric) from public, anon;
+grant execute on function public.assign_team(text, text, numeric, int, numeric) to authenticated;
+
+-- 11. MATCH SCORING -------------------------------------------
+-- The umpire records one row per delivery. Every number on the scoreboard is
+-- derived from those rows, the same way team balances are derived from sales:
+-- there is no score column anybody can disagree with.
+
+create table public.matches (
+  id           uuid primary key default gen_random_uuid(),
+  name         text not null check (length(trim(name)) > 0),
+  team_a       uuid not null references public.teams(id),
+  team_b       uuid not null references public.teams(id) check (team_b <> team_a),
+  overs        int  not null default 10 check (overs > 0),
+  innings      int  not null default 1 check (innings in (1, 2)),
+  batting_team uuid not null references public.teams(id),
+  status       text not null default 'live' check (status in ('live', 'done')),
+  created_at   timestamptz not null default now()
+);
+
+create table public.deliveries (
+  id         uuid primary key default gen_random_uuid(),
+  match_id   uuid not null references public.matches(id) on delete cascade,
+  innings    int  not null check (innings in (1, 2)),
+  seq        int  not null,
+  striker    uuid references public.players(id),
+  bowler     uuid references public.players(id),
+  runs       int  not null default 0 check (runs between 0 and 6),
+  extra      text check (extra in ('wide', 'noball', 'bye', 'legbye')),
+  extra_runs int  not null default 0 check (extra_runs >= 0),
+  wicket     boolean not null default false,
+  out_player uuid references public.players(id),
+  at         timestamptz not null default now(),
+  unique (match_id, innings, seq)
+);
+create index deliveries_match_idx on public.deliveries(match_id, innings, seq);
+
+-- A wide or no-ball does not count towards the over; byes and leg byes do.
+create or replace view public.match_score
+with (security_invoker = on) as
+select
+  d.match_id,
+  d.innings,
+  sum(d.runs + d.extra_runs)::int                                        as runs,
+  count(*) filter (where d.wicket)::int                                  as wickets,
+  count(*) filter (where d.extra is null or d.extra in ('bye', 'legbye'))::int as legal_balls
+from public.deliveries d
+group by d.match_id, d.innings;
+
+-- Batting figures: runs off the bat, and balls actually faced (a wide is not).
+create or replace view public.batting_card
+with (security_invoker = on) as
+select
+  d.match_id, d.innings, d.striker as player_id,
+  sum(d.runs)::int                                          as runs,
+  count(*) filter (where d.extra is distinct from 'wide')::int as balls,
+  count(*) filter (where d.runs = 4)::int                   as fours,
+  count(*) filter (where d.runs = 6)::int                   as sixes
+from public.deliveries d
+where d.striker is not null
+group by d.match_id, d.innings, d.striker;
+
+-- Bowling figures: byes and leg byes are not charged to the bowler.
+create or replace view public.bowling_card
+with (security_invoker = on) as
+select
+  d.match_id, d.innings, d.bowler as player_id,
+  sum(d.runs + case when d.extra in ('wide', 'noball') then d.extra_runs else 0 end)::int as runs,
+  count(*) filter (where d.extra is null or d.extra in ('bye', 'legbye'))::int            as balls,
+  count(*) filter (where d.wicket)::int                                                   as wickets
+from public.deliveries d
+where d.bowler is not null
+group by d.match_id, d.innings, d.bowler;
+
+alter table public.matches    enable row level security;
+alter table public.deliveries enable row level security;
+
+-- Everyone watches the score; only the auctioneer (umpire) records it.
+create policy matches_read on public.matches
+  for select to authenticated using (true);
+create policy matches_write on public.matches
+  for all to authenticated
+  using      (exists (select 1 from public.auctioneers a where a.user_id = auth.uid()))
+  with check (exists (select 1 from public.auctioneers a where a.user_id = auth.uid()));
+
+create policy deliveries_read on public.deliveries
+  for select to authenticated using (true);
+create policy deliveries_write on public.deliveries
+  for all to authenticated
+  using      (exists (select 1 from public.auctioneers a where a.user_id = auth.uid()))
+  with check (exists (select 1 from public.auctioneers a where a.user_id = auth.uid()));
+
+do $$ begin
+  alter publication supabase_realtime add table public.deliveries;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.matches;
+exception when duplicate_object then null; end $$;
+
+-- 12. THE UMPIRE ----------------------------------------------
+-- A third role: scores matches, touches nothing in the auction.
+
+create table public.umpires (
+  user_id uuid primary key references auth.users(id) on delete cascade
+);
+alter table public.umpires enable row level security;
+create policy umpires_read_self on public.umpires
+  for select to authenticated using (user_id = auth.uid());
+
+drop policy if exists matches_write on public.matches;
+create policy matches_write on public.matches
+  for all to authenticated
+  using      (exists (select 1 from public.auctioneers a where a.user_id = auth.uid())
+           or exists (select 1 from public.umpires u where u.user_id = auth.uid()))
+  with check (exists (select 1 from public.auctioneers a where a.user_id = auth.uid())
+           or exists (select 1 from public.umpires u where u.user_id = auth.uid()));
+
+drop policy if exists deliveries_write on public.deliveries;
+create policy deliveries_write on public.deliveries
+  for all to authenticated
+  using      (exists (select 1 from public.auctioneers a where a.user_id = auth.uid())
+           or exists (select 1 from public.umpires u where u.user_id = auth.uid()))
+  with check (exists (select 1 from public.auctioneers a where a.user_id = auth.uid())
+           or exists (select 1 from public.umpires u where u.user_id = auth.uid()));

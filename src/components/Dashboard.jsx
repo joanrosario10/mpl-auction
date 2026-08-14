@@ -5,7 +5,6 @@ import { usePool } from '../hooks/usePool'
 import { useBlock } from '../hooks/useBlock'
 import { useSales } from '../hooks/useSales'
 import { useAuctioneer } from '../hooks/useAuctioneer'
-import { CreateTeam } from './CreateTeam'
 import { TeamStats } from './TeamStats'
 import { Block } from './Block'
 import { SquadGallery } from './SquadGallery'
@@ -23,7 +22,17 @@ export function Dashboard({ user }) {
   const loadError = [authErr, teamsErr, poolErr, blockErr, salesErr].find(Boolean)
 
   if (loading) return <div className="glass">Loading…</div>
-  if (!team) return <CreateTeam user={user} onDone={reload} />
+  if (!team) {
+    return (
+      <div className="glass">
+        <h1>No team yet</h1>
+        <p className="muted">
+          The auction organiser assigns teams. Yours will appear here as soon as they do.
+        </p>
+        <p><button className="link" onClick={() => supabase.auth.signOut()}>Sign out</button></p>
+      </div>
+    )
+  }
 
   return (
     <>

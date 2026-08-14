@@ -1,9 +1,10 @@
 import { useAllSquads } from '../hooks/useAllSquads'
 import { initials, money, photoUrl } from '../lib/format'
+import { AssignTeam } from './AssignTeam'
 
 /** Auctioneer's full picture: every team, every player, every price. */
 export function AdminOverview() {
-  const { teams, error } = useAllSquads()
+  const { teams, error, reload } = useAllSquads()
 
   const totalSpent = teams.reduce((sum, t) => sum + Number(t.spent ?? 0), 0)
   const totalBought = teams.reduce((sum, t) => sum + Number(t.bought ?? 0), 0)
@@ -17,6 +18,8 @@ export function AdminOverview() {
           <small>{teams.length} teams · {totalBought} players sold · {money(totalSpent)} spent in total</small>
         </p>
       </div>
+
+      <AssignTeam onDone={reload} />
 
       {teams.map(t => (
         <div className="glass" key={t.id}>

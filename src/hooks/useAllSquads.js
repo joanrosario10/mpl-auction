@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 
 /**
@@ -9,8 +9,7 @@ export function useAllSquads() {
   const [teams, setTeams] = useState([])
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
       const [{ data: t, error: te }, { data: p, error: pe }] = await Promise.all([
         supabase.from('team_status').select('*').order('name'),
         supabase.from('players')
@@ -19,12 +18,13 @@ export function useAllSquads() {
       ])
       if (te || pe) return setError((te || pe).message)
       setError('')
-      setTeams((t ?? []).map(team => ({
-        ...team,
-        players: (p ?? []).filter(pl => pl.team_id === team.id),
-      })))
-    }
+    setTeams((t ?? []).map(team => ({
+      ...team,
+      players: (p ?? []).filter(pl => pl.team_id === team.id),
+    })))
+  }, [])
 
+  useEffect(() => {
     fetchAll()
 
     const channel = supabase.channel('all-squads')
@@ -33,7 +33,7 @@ export function useAllSquads() {
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [])
+  }, [fetchAll])
 
-  return { teams, error }
+  return { teams, error, reload: fetchAll }
 }
