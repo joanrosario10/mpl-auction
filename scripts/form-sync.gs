@@ -4,7 +4,7 @@
  * Setup (once):
  *  1. Open the responses Sheet → Extensions → Apps Script, paste this file.
  *  2. Project Settings → Script Properties, add:
- *       SUPABASE_URL = https://dpwxlbijbvsjvoebjaem.supabase.co
+ *       SUPABASE_URL = https://<your-project>.supabase.co
  *       SUPABASE_SERVICE_KEY = <your service key>   ← rotate first, never commit it
  *  3. Triggers → Add trigger → onFormSubmit → From spreadsheet → On form submit.
  *
