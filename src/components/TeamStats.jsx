@@ -14,7 +14,7 @@ export function TeamStats({ team }) {
       </div>
 
       {team.slots_left > 1 && (
-        <p className="muted"><small>
+        <p className="note"><small>
           {money((team.slots_left - 1) * team.base_price)} is reserved to fill your
           remaining {team.slots_left - 1} slot(s) at base price {money(team.base_price)}.
         </small></p>

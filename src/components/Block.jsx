@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
-import { money, photoUrl, playerTraits } from '../lib/format'
+import { money, photoUrl, playerChips } from '../lib/format'
 import { RecordSale } from './RecordSale'
 
 export function Block({ block, team, pool, teams, isAuctioneer, onSold }) {
@@ -21,7 +21,11 @@ export function Block({ block, team, pool, teams, isAuctioneer, onSold }) {
         <img className="hero" src={photoUrl(up.photo_id)} alt={block.player_name} />
       )}
       <b>{block.player_name}</b>
-      {up && <p className="muted">{playerTraits(up)}</p>}
+      {up && (
+        <div className="chips">
+          {playerChips(up).map(c => <span key={c} className="chip">{c}</span>)}
+        </div>
+      )}
       {team && <span>your max bid is {money(team.max_bid)}</span>}
 
       {isAuctioneer && (

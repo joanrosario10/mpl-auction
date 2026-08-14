@@ -1,11 +1,12 @@
 import { supabase } from '../supabase'
-import { initials, money, photoUrl, playerTraits } from '../lib/format'
+import { initials, money, photoUrl } from '../lib/format'
 
 /**
- * Every registered player. Sold ones carry the team that bought them and the
- * price they went for. The auctioneer taps an unsold card to put them up.
+ * Every registered player, with what they actually play. Sold lots carry the
+ * team that bought them and the price. The auctioneer taps an unsold card to
+ * put that player up.
  */
-export function PlayerMarket({ pool, sales, isAuctioneer, onError, loadError = '' }) {
+export function PlayerMarket({ pool, sales, block, isAuctioneer, onError, loadError = '' }) {
   const putUp = async (player) => {
     const { error } = await supabase.from('block').upsert({
       id: true,
@@ -32,28 +33,37 @@ export function PlayerMarket({ pool, sales, isAuctioneer, onError, loadError = '
         </p>
       )}
 
-      <div className="gallery">
+      <div className="market">
         {pool.map(p => {
           const sale = sales[p.id]
-          const Tag = isAuctioneer && !sale ? 'button' : 'figure'
+          const onBlock = block?.pool_id === p.id
           return (
-            <Tag key={p.id} className={`pcard${sale ? ' is-sold' : ''}`}
-                 {...(Tag === 'button'
-                   ? { type: 'button', onClick: () => putUp(p), title: `Put ${p.name} up` }
-                   : {})}>
-              {photoUrl(p.photo_id)
-                ? <img src={photoUrl(p.photo_id)} alt={p.name} loading="lazy" />
-                : <div className="pcard-blank">{initials(p.name)}</div>}
+            <article key={p.id} className={`mcard${sale ? ' is-sold' : ''}${onBlock ? ' is-up' : ''}`}>
+              <div className="mcard-photo">
+                {photoUrl(p.photo_id)
+                  ? <img src={photoUrl(p.photo_id)} alt={p.name} loading="lazy" />
+                  : <div className="pcard-blank">{initials(p.name)}</div>}
+                {sale && <div className="sold-stamp">sold</div>}
+                {!sale && onBlock && <div className="up-stamp">on the block</div>}
+              </div>
 
-              {sale && <div className="sold-stamp">sold</div>}
-
-              <figcaption>
+              <div className="mcard-body">
                 <b>{p.name}</b>
-                {sale
-                  ? <span className="sold-line">{sale.team?.name} · {money(sale.price)}</span>
-                  : <span>{playerTraits(p)}</span>}
-              </figcaption>
-            </Tag>
+                {p.all_rounder && <span className="badge">all rounder</span>}
+
+                <dl className="traits">
+                  {p.age && <><dt>age</dt><dd>{p.age}</dd></>}
+                  {p.batting && <><dt>batting</dt><dd>{p.batting}</dd></>}
+                  {p.bowling && <><dt>bowling</dt><dd>{p.bowling}</dd></>}
+                </dl>
+
+                {sale && <p className="sold-line">{sale.team?.name} · {money(sale.price)}</p>}
+                {!sale && onBlock && <p className="up-line">up for bidding now</p>}
+                {!sale && !onBlock && isAuctioneer && (
+                  <button type="button" onClick={() => putUp(p)}>Put up for bidding</button>
+                )}
+              </div>
+            </article>
           )
         })}
       </div>

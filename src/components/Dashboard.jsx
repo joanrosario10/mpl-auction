@@ -44,7 +44,7 @@ export function Dashboard({ user }) {
       <SquadGallery players={players} onChange={reload} onError={setError}
                     canUndo={isAuctioneer} />
 
-      <PlayerMarket pool={pool} sales={sales} isAuctioneer={isAuctioneer}
+      <PlayerMarket pool={pool} sales={sales} block={block} isAuctioneer={isAuctioneer}
                     loadError={poolErr} onError={setError} />
     </>
   )

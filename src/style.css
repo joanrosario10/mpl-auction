@@ -56,7 +56,8 @@ form { margin: 0; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .row input { width: auto; flex: 1 1 140px; margin-bottom: 0; }
 
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+@media (min-width: 560px) { .stats { grid-template-columns: repeat(4, 1fr); } }
 .stat { background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .35);
         border-radius: 14px; padding: 12px; }
 .stat b { display: block; font-size: clamp(18px, 5vw, 24px); }
@@ -71,6 +72,8 @@ form { margin: 0; }
 
 .err { color: #ffb4b4; margin: 10px 0 0; white-space: pre-wrap; }
 .muted { opacity: .8; font-size: 13px; }
+.note { background: rgba(0, 0, 0, .35); border-radius: 12px; padding: 10px 14px;
+        margin: 0 0 16px; font-size: 13px; }
 
 table { width: 100%; border-collapse: collapse; }
 td, th { text-align: left; padding: 10px 4px; border-bottom: 1px solid rgba(255, 255, 255, .25);
@@ -112,6 +115,39 @@ select { background: rgba(217, 217, 217, .9); color: #111; border: 0;
   text-align: center; padding: 3px 0; box-shadow: 0 2px 6px rgba(0, 0, 0, .4);
 }
 .pcard .sold-line { color: #ffd9d9; font-weight: 500; }
-button.pcard { display: block; width: 100%; padding: 0; text-align: left;
-               background: rgba(255, 255, 255, .12); min-height: 0; cursor: pointer; }
-button.pcard:hover { border-color: var(--red); }
+/* market card: photo on the left, what they play on the right */
+.market { display: grid; gap: 12px; }
+.mcard { display: grid; grid-template-columns: 96px 1fr; gap: 14px;
+         background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .35);
+         border-radius: 14px; padding: 12px; }
+.mcard-photo { position: relative; overflow: hidden; border-radius: 10px; }
+.mcard-photo img, .mcard-photo .pcard-blank {
+  display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+.mcard.is-sold .mcard-photo img { filter: grayscale(.55) brightness(.7); }
+.mcard-body { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.mcard-body > b { font-size: clamp(17px, 4.5vw, 21px); overflow-wrap: anywhere; }
+.badge { font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+         background: rgba(255, 255, 255, .22); border-radius: 999px; padding: 3px 10px; }
+.traits { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 2px 0 0; }
+.traits dt { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: .65; }
+.traits dd { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+.mcard button { margin-top: 6px; min-height: 40px; font-size: 14px; }
+.mcard .sold-line { margin: 6px 0 0; color: #ffd9d9; font-weight: 500; }
+.mcard .sold-stamp { top: 8px; left: -22px; width: 90px; font-size: 10px; }
+
+/* block card polish: one column width for every control, no mid-phrase wraps */
+.block img.hero { max-height: min(46vh, 340px); width: auto; aspect-ratio: auto; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 10px 0 4px; }
+.chip { font-size: 12px; line-height: 1.4; padding: 4px 10px; border-radius: 999px;
+        background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .28); }
+.block form { max-width: 340px; margin-inline: auto; display: grid; gap: 10px; }
+.block form select, .block form input, .block form button { width: 100%; margin: 0; }
+
+/* the default focus ring is a blue that belongs to no part of this design */
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+input:focus, select:focus { outline: 2px solid var(--red); outline-offset: 2px; }
+.mcard.is-up { border-color: var(--red); }
+.up-stamp { position: absolute; left: 0; right: 0; bottom: 0; background: var(--red);
+            font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+            text-align: center; padding: 3px 0; }
+.up-line { margin: 6px 0 0; font-size: 13px; color: #ffd9d9; }
