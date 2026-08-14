@@ -1,7 +1,7 @@
 import { supabase } from '../supabase'
 import { initials, money, photoUrl } from '../lib/format'
 
-export function SquadGallery({ players, onChange, onError }) {
+export function SquadGallery({ players, onChange, onError, canUndo = false }) {
   const undo = async (id) => {
     const { error } = await supabase.from('players').delete().eq('id', id)
     if (error) onError(error.message)
@@ -23,7 +23,7 @@ export function SquadGallery({ players, onChange, onError }) {
               <b>{p.name}</b>
               <span>{money(p.price)}</span>
             </figcaption>
-            <button onClick={() => undo(p.id)}>undo</button>
+            {canUndo && <button onClick={() => undo(p.id)}>undo</button>}
           </figure>
         ))}
       </div>

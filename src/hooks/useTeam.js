@@ -35,5 +35,17 @@ export function useTeam(userId) {
 
   useEffect(() => { reload() }, [reload])
 
+  // The auctioneer records purchases now, so the owner's own squad changes
+  // from somebody else's action. Without this it only updates on refresh.
+  useEffect(() => {
+    if (!team?.id) return
+    const channel = supabase.channel(`squad-${team.id}`)
+      .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'players', filter: `team_id=eq.${team.id}` },
+          reload)
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [team?.id, reload])
+
   return { team, players, error, setError, loading, reload }
 }

@@ -180,3 +180,31 @@ alter table public.block add column pool_id uuid references public.player_pool(i
 -- A registered player can only be sold once. Enforced here, not in the UI:
 -- two owners can click "I won this" at the same time.
 create unique index players_pool_id_key on public.players(pool_id) where pool_id is not null;
+
+-- 8. WHO RECORDS A SALE ---------------------------------------
+-- Owners used to enter their own purchases, which made every squad a claim
+-- nobody could verify. The auctioneer runs the room and hears the hammer, so
+-- the auctioneer is the only writer. Owners read; they cannot add or remove.
+
+drop policy if exists players_own on public.players;
+
+create policy players_read_own on public.players
+  for select to authenticated
+  using (exists (select 1 from public.teams t
+                 where t.id = players.team_id and t.owner_id = auth.uid()));
+
+create policy players_auctioneer on public.players
+  for all to authenticated
+  using      (exists (select 1 from public.auctioneers a where a.user_id = auth.uid()))
+  with check (exists (select 1 from public.auctioneers a where a.user_id = auth.uid()));
+
+-- The auctioneer needs every team in the dropdown to record who won.
+create policy teams_read_auctioneer on public.teams
+  for select to authenticated
+  using (exists (select 1 from public.auctioneers a where a.user_id = auth.uid()));
+
+-- Owners no longer write, so their squad only changes from someone else's
+-- action — it has to arrive over realtime or they'd stare at a stale screen.
+do $$ begin
+  alter publication supabase_realtime add table public.players;
+exception when duplicate_object then null; end $$;

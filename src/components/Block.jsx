@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
 import { money, photoUrl, playerTraits } from '../lib/format'
+import { RecordSale } from './RecordSale'
 
-export function Block({ block, team, pool, isAuctioneer }) {
+export function Block({ block, team, pool, teams, isAuctioneer, onSold }) {
   const [pick, setPick] = useState('')
   const [err, setErr] = useState('')
   const up = pool.find(p => p.id === block?.pool_id)
@@ -40,7 +41,8 @@ export function Block({ block, team, pool, isAuctioneer }) {
           )}
           <b>{block.player_name}</b>
           {up && <p className="muted">{playerTraits(up)}</p>}
-          <span>your max bid is {money(team.max_bid)}</span>
+          {team && <span>your max bid is {money(team.max_bid)}</span>}
+          {isAuctioneer && <RecordSale block={block} teams={teams} onDone={onSold} />}
         </>
       )}
 
