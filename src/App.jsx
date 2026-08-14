@@ -23,10 +23,24 @@ export default function App() {
   // Projected: the whole screen, no app chrome.
   if (route === 'board') return <Board />
 
+  // An umpire scores matches and does nothing else: no auction, no squads, no
+  // tabs to wander into. They land on the console whatever the hash says.
+  if (isUmpire && !isAuctioneer) {
+    return (
+      <main>
+        <header className="brand">
+          <b>MPL</b>
+          <span>Moolaikadu Premium League</span>
+        </header>
+        <UmpireConsole />
+      </main>
+    )
+  }
+
   // Scoring lives on its own route. The auction screen never shows it.
   const canScore = isAuctioneer || isUmpire
   const screen =
-    route === 'umpire' && canScore ? <UmpireConsole isAdmin={isAuctioneer} />
+    route === 'umpire' && canScore ? <UmpireConsole />
     : route === 'admin' && isAuctioneer ? <AdminOverview />
     : <Dashboard user={session.user} />
 

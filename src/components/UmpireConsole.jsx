@@ -25,7 +25,7 @@ function deliveryFrom(mode, runs) {
   return { runs, extra: null, extra_runs: 0 }
 }
 
-export function UmpireConsole({ isAdmin }) {
+export function UmpireConsole() {
   const { match, deliveries, error, reload } = useMatch()
   const { teams } = useAllSquads()
   const [mode, setMode] = useState('ball')
@@ -53,12 +53,8 @@ export function UmpireConsole({ isAdmin }) {
   const bat = battingCard(innings)
   const bowl = bowlingCard(innings)
 
-  if (!match) {
-    return isAdmin
-      ? <StartMatch teams={teams} onDone={reload} />
-      : <div className="glass"><h1>No live match</h1>
-          <p className="muted">The organiser starts the match.</p></div>
-  }
+  // The umpire fixes the match themselves — A vs B, overs, who bats first.
+  if (!match) return <StartMatch teams={teams} onDone={reload} />
 
   const record = async (runs) => {
     if (!striker || !bowler) return setErr('Choose the striker and the bowler first.')
