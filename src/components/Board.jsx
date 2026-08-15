@@ -47,7 +47,7 @@ export function Board() {
         {teams.map(t => (
           <article key={t.id} className="board-team">
             <b>{t.name}</b>
-            <span className="board-team-spend">{money(t.balance)} left · {t.bought}/{t.squad_size}</span>
+            <span className="board-team-spend">{t.bought}/{t.squad_size} bought · {money(t.spent)} spent</span>
             <ul>
               {t.players.slice(0, 6).map(p => (
                 <li key={p.id}><span>{p.name}</span><em>{money(p.price)}</em></li>

@@ -51,13 +51,13 @@ export function RecordSale({ block, teams, onDone }) {
         <option value="">sold to…</option>
         {teams.map(t => (
           <option key={t.id} value={t.id} disabled={t.slots_left <= 0}>
-            {t.name} — up to {money(t.max_bid)}{t.slots_left <= 0 ? ' (full)' : ''}
+            {t.name}{t.slots_left <= 0 ? ' (squad full)' : ''}
           </option>
         ))}
       </select>
-      <input type="number" step="0.01" min="0"
-             max={winner ? winner.max_bid : undefined}
-             placeholder={winner ? `price (max ${winner.max_bid})` : 'price'}
+      {/* No max on the input and no hint in the placeholder: the limit is a
+          team's private business. The trigger still rejects an overbid. */}
+      <input type="number" step="0.01" min="0" placeholder="price"
              value={price} onChange={e => setPrice(e.target.value)} />
       <button disabled={busy || !teamId}>Confirm sale</button>
       {err && <p className="err">{err}</p>}
