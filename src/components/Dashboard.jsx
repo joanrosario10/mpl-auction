@@ -49,8 +49,8 @@ export function Dashboard({ user }) {
 
       {(error || loadError) && <p className="err">{error || loadError}</p>}
 
-      <SquadGallery players={players} onChange={reload} onError={setError}
-                    canUndo={isAuctioneer} />
+      {/* Owners confirm their own buys, so they undo their own mistakes too. */}
+      <SquadGallery players={players} onChange={reload} onError={setError} canUndo />
 
       <PlayerMarket pool={pool} sales={sales} block={block} isAuctioneer={isAuctioneer}
                     loadError={poolErr} onError={setError} />

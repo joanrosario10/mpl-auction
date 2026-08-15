@@ -394,3 +394,10 @@ create policy players_insert_own on public.players
   for insert to authenticated
   with check (exists (select 1 from public.teams t
                       where t.id = players.team_id and t.owner_id = auth.uid()));
+
+-- An owner who can confirm a buy must be able to take it back — a mistyped
+-- price would otherwise be stuck until the organiser fixed it.
+create policy players_delete_own on public.players
+  for delete to authenticated
+  using (exists (select 1 from public.teams t
+                 where t.id = players.team_id and t.owner_id = auth.uid()));
