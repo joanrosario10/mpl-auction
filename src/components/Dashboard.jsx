@@ -1,6 +1,5 @@
 import { supabase } from '../supabase'
 import { useTeam } from '../hooks/useTeam'
-import { useTeams } from '../hooks/useTeams'
 import { usePool } from '../hooks/usePool'
 import { useBlock } from '../hooks/useBlock'
 import { useSales } from '../hooks/useSales'
@@ -13,13 +12,12 @@ import { PlayerMarket } from './PlayerMarket'
 export function Dashboard({ user }) {
   const { team, players, error, setError, loading, reload } = useTeam(user.id)
   const { isAuctioneer, error: authErr } = useAuctioneer(user.id)
-  const { teams, error: teamsErr } = useTeams(isAuctioneer)
   const { pool, error: poolErr } = usePool()
   const { block, error: blockErr } = useBlock()
   const { sales, error: salesErr } = useSales()
 
   // Every load failure surfaces; an empty screen must never pass for "no data".
-  const loadError = [authErr, teamsErr, poolErr, blockErr, salesErr].find(Boolean)
+  const loadError = [authErr, poolErr, blockErr, salesErr].find(Boolean)
 
   if (loading) return <div className="glass">Loading…</div>
   if (!team) {
@@ -45,7 +43,8 @@ export function Dashboard({ user }) {
 
       <TeamStats team={team} />
 
-      <Block block={block} team={team} pool={pool} teams={teams}
+      <Block block={block} team={team} pool={pool}
+             sale={block ? sales[block.pool_id] : null}
              isAuctioneer={isAuctioneer} onSold={reload} />
 
       {(error || loadError) && <p className="err">{error || loadError}</p>}

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
 import { money, photoUrl, playerChips } from '../lib/format'
-import { RecordSale } from './RecordSale'
+import { ConfirmBuy } from './ConfirmBuy'
 
-export function Block({ block, team, pool, teams, isAuctioneer, onSold }) {
+export function Block({ block, team, pool, sale, isAuctioneer, onSold }) {
   const [err, setErr] = useState('')
   const up = pool.find(p => p.id === block?.pool_id)
 
@@ -28,11 +28,12 @@ export function Block({ block, team, pool, teams, isAuctioneer, onSold }) {
       )}
       {team && <span>your max bid is {money(team.max_bid)}</span>}
 
+      {sale
+        ? <p className="sold-line">sold to {sale.team?.name} for {money(sale.price)}</p>
+        : team && <ConfirmBuy block={block} team={team} onDone={onSold} />}
+
       {isAuctioneer && (
-        <>
-          <RecordSale block={block} teams={teams} onDone={onSold} />
-          <p><button type="button" className="link" onClick={clear}>clear the block</button></p>
-        </>
+        <p><button type="button" className="link" onClick={clear}>clear the block</button></p>
       )}
 
       {err && <p className="err">{err}</p>}

@@ -383,3 +383,14 @@ create policy deliveries_write on public.deliveries
            or exists (select 1 from public.umpires u where u.user_id = auth.uid()))
   with check (exists (select 1 from public.auctioneers a where a.user_id = auth.uid())
            or exists (select 1 from public.umpires u where u.user_id = auth.uid()));
+
+-- 13. THE OWNER CONFIRMS THEIR OWN BUY ------------------------
+-- Reversing part of section 8 at the organiser's instruction: the owner taps
+-- the price and confirms for their own team. The organiser still controls what
+-- is on the projector, and the unique index on pool_id still means the first
+-- confirm wins — a player cannot be claimed twice.
+
+create policy players_insert_own on public.players
+  for insert to authenticated
+  with check (exists (select 1 from public.teams t
+                      where t.id = players.team_id and t.owner_id = auth.uid()));
