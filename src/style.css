@@ -220,3 +220,6 @@ input:focus, select:focus { outline: 2px solid var(--red); outline-offset: 2px; 
 .umpire select { width: 100%; margin-bottom: 10px; }
 .chase { display: inline-block; margin: 8px 0 0; padding: 6px 16px; border-radius: 999px;
          background: rgba(255, 255, 255, .2); font-size: 14px; }
+.mcard.is-pickable { cursor: pointer; }
+.mcard.is-pickable:hover { border-color: var(--red); }
+.mcard.is-pickable:active { transform: scale(.995); }

@@ -17,6 +17,7 @@ export function PlayerMarket({ pool, sales, block, isAuctioneer, onError, loadEr
     if (error) onError(error.message)
   }
 
+  const canPutUp = isAuctioneer
   const sold = pool.filter(p => sales[p.id]).length
 
   return (
@@ -38,7 +39,11 @@ export function PlayerMarket({ pool, sales, block, isAuctioneer, onError, loadEr
           const sale = sales[p.id]
           const onBlock = block?.pool_id === p.id
           return (
-            <article key={p.id} className={`mcard${sale ? ' is-sold' : ''}${onBlock ? ' is-up' : ''}`}>
+            <article key={p.id}
+                     className={`mcard${sale ? ' is-sold' : ''}${onBlock ? ' is-up' : ''}`
+                                + (canPutUp && !sale && !onBlock ? ' is-pickable' : '')}
+                     onClick={canPutUp && !sale && !onBlock ? () => putUp(p) : undefined}
+                     title={canPutUp && !sale && !onBlock ? `Put ${p.name} on the projector` : undefined}>
               <div className="mcard-photo">
                 {photoUrl(p.photo_id)
                   ? <img src={photoUrl(p.photo_id)} alt={p.name} loading="lazy" />
@@ -60,7 +65,7 @@ export function PlayerMarket({ pool, sales, block, isAuctioneer, onError, loadEr
                 {sale && <p className="sold-line">{sale.team?.name} · {money(sale.price)}</p>}
                 {!sale && onBlock && <p className="up-line">up for bidding now</p>}
                 {!sale && !onBlock && isAuctioneer && (
-                  <button type="button" onClick={() => putUp(p)}>Put up for bidding</button>
+                  <button type="button">Put up for bidding</button>
                 )}
               </div>
             </article>

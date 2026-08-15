@@ -1,10 +1,19 @@
+import { useState } from 'react'
 import { useAllSquads } from '../hooks/useAllSquads'
+import { usePool } from '../hooks/usePool'
+import { useSales } from '../hooks/useSales'
+import { useBlock } from '../hooks/useBlock'
+import { PlayerMarket } from './PlayerMarket'
 import { initials, money, photoUrl } from '../lib/format'
 import { AssignTeam } from './AssignTeam'
 
 /** Auctioneer's full picture: every team, every player, every price. */
 export function AdminOverview() {
   const { teams, error, reload } = useAllSquads()
+  const { pool, error: poolErr } = usePool()
+  const { sales } = useSales()
+  const { block } = useBlock()
+  const [actionErr, setActionErr] = useState('')
 
   const totalSpent = teams.reduce((sum, t) => sum + Number(t.spent ?? 0), 0)
   const totalBought = teams.reduce((sum, t) => sum + Number(t.bought ?? 0), 0)
@@ -15,9 +24,16 @@ export function AdminOverview() {
         <h1>All teams</h1>
         {error && <p className="err">{error}</p>}
         <p className="muted">
-          <small>{teams.length} teams · {totalBought} players sold · {money(totalSpent)} spent in total</small>
+          <small>
+            {teams.length} teams · {totalBought} of {pool.length} players sold ·
+            {' '}{money(totalSpent)} spent in total
+          </small>
         </p>
+        {actionErr && <p className="err">{actionErr}</p>}
       </div>
+
+      <PlayerMarket pool={pool} sales={sales} block={block} isAuctioneer
+                    loadError={poolErr} onError={setActionErr} />
 
       <AssignTeam onDone={reload} />
 
