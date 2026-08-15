@@ -1,16 +1,14 @@
 import { usePool } from '../hooks/usePool'
 import { useBlock } from '../hooks/useBlock'
-import { useAllSquads } from '../hooks/useAllSquads'
-import { initials, money, photoUrl, playerChips } from '../lib/format'
+import { initials, photoUrl, playerChips } from '../lib/format'
 
 /**
- * The projector view. No controls, no chrome: whatever the auctioneer puts up
- * appears here for the whole room, and every team's spend sits underneath.
+ * The projector view. No controls, no chrome, no standings: only the player
+ * the auctioneer has put up, filling the wall.
  */
 export function Board() {
   const { pool } = usePool()
   const { block } = useBlock()
-  const { teams } = useAllSquads()
 
   const up = pool.find(p => p.id === block?.pool_id)
 
@@ -43,21 +41,6 @@ export function Board() {
         </section>
       )}
 
-      <section className="board-teams">
-        {teams.map(t => (
-          <article key={t.id} className="board-team">
-            <b>{t.name}</b>
-            <span className="board-team-spend">{t.bought}/{t.squad_size} bought · {money(t.spent)} spent</span>
-            <ul>
-              {t.players.slice(0, 6).map(p => (
-                <li key={p.id}><span>{p.name}</span><em>{money(p.price)}</em></li>
-              ))}
-              {t.players.length > 6 && <li className="more">+{t.players.length - 6} more</li>}
-              {t.players.length === 0 && <li className="more">no players yet</li>}
-            </ul>
-          </article>
-        ))}
-      </section>
     </div>
   )
 }

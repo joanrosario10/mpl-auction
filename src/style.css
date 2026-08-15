@@ -183,18 +183,6 @@ input:focus, select:focus { outline: 2px solid var(--red); outline-offset: 2px; 
 
 .board-idle { display: grid; place-items: center; min-height: 40vh; }
 
-.board-teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-               gap: 12px; margin-top: 4vh; }
-.board-team { background: rgba(0, 0, 0, .4); border: 1px solid rgba(255, 255, 255, .22);
-              border-radius: 14px; padding: 12px 14px; }
-.board-team > b { font-size: clamp(16px, 1.6vw, 24px); }
-.board-team-spend { display: block; font-size: 12px; opacity: .7; margin-bottom: 8px; }
-.board-team ul { list-style: none; margin: 0; padding: 0; }
-.board-team li { display: flex; justify-content: space-between; gap: 10px;
-                 font-size: clamp(12px, 1.1vw, 16px); padding: 3px 0;
-                 border-bottom: 1px solid rgba(255, 255, 255, .12); }
-.board-team li.more { opacity: .55; border: 0; justify-content: center; font-size: 12px; }
-.board-team em { font-style: normal; opacity: .8; white-space: nowrap; }
 
 /* umpire console */
 .score { text-align: center; }
